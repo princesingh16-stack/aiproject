@@ -1,3 +1,7 @@
+[![Built with askThili](https://ask.thili.ai/api/v1/public/projects/d9vsyjrnms/badge.svg)](https://ask.thili.ai/b/d9vsyjrnms)
+[![Built with askThili](https://ask.thili.ai/api/v1/public/projects/zgqr45ere6/badge.svg)](https://ask.thili.ai/b/zgqr45ere6)
+[![Built with askThili](https://ask.thili.ai/api/v1/public/projects/fyvrjpp46y/badge.svg)](https://ask.thili.ai/b/fyvrjpp46y)
+
 [![Built with askThili](https://ask.thili.ai/api/v1/public/projects/ng2qks3qxx/badge.svg)](https://ask.thili.ai/b/ng2qks3qxx)
 [![Built with askThili](https://ask.thili.ai/api/v1/public/projects/xmc53n5bmt/badge.svg)](https://ask.thili.ai/b/xmc53n5bmt)
 
