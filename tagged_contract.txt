@@ -1,0 +1,87 @@
+CLAUSE 1:
+The agreement shall be governed by and construed in accordance with the laws of India.
+
+PREDICTED LABEL:
+Survival
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
+
+CLAUSE 2:
+Either party may terminate this agreement upon thirty (30) days written notice to the other party.
+
+PREDICTED LABEL:
+Payment_Terms
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
+
+CLAUSE 3:
+Each party agrees to keep confidential all proprietary information disclosed by the other party and shall not disclose such information to any third party.
+
+PREDICTED LABEL:
+Payment_Terms
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
+
+CLAUSE 4:
+The Company shall indemnify and hold harmless the Client from any claims, damages, or expenses arising from the Company's breach of this agreement.
+
+PREDICTED LABEL:
+Payment_Terms
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
+
+CLAUSE 5:
+In no event shall either party be liable for any indirect, incidental, special, or consequential damages.
+
+PREDICTED LABEL:
+Survival
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
+
+CLAUSE 6:
+Any dispute arising out of or in connection with this agreement shall be settled by arbitration in New Delhi.
+
+PREDICTED LABEL:
+Survival
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
+
+CLAUSE 7:
+All intellectual property created during the performance of this agreement shall remain the property of the Client.
+
+PREDICTED LABEL:
+Payment_Terms
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
+
+CLAUSE 8:
+Payment shall be made within thirty (30) days of receipt of invoice.
+
+PREDICTED LABEL:
+Limitation_of_Liability
+
+CONFIDENCE:
+5.0%
+
+------------------------------------------------------------
