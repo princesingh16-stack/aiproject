@@ -1,3 +1,5 @@
+﻿[![Built with askThili](https://ask.thili.ai/api/v1/public/projects/xmc53n5bmt/badge.svg)](https://ask.thili.ai/b/xmc53n5bmt)
+
 # Legal Document LoRA Tagger
 
 ![CI](https://github.com/your-org/legal-document-lora-tagger/actions/workflows/ci.yml/badge.svg)
@@ -30,9 +32,9 @@
 
 ## 1. Project Overview
 
-**Legal Document LoRA Tagger** is an end-to-end machine-learning pipeline that automatically classifies individual clauses inside legal contracts. Given a paragraph of legal text, the model outputs a structured label — such as `Governing_Law`, `Termination`, `Indemnification`, or one of 17 other clause types — enabling downstream automation of contract review, risk analysis, and compliance checking.
+**Legal Document LoRA Tagger** is an end-to-end machine-learning pipeline that automatically classifies individual clauses inside legal contracts. Given a paragraph of legal text, the model outputs a structured label â€” such as `Governing_Law`, `Termination`, `Indemnification`, or one of 17 other clause types â€” enabling downstream automation of contract review, risk analysis, and compliance checking.
 
-The system is built on top of **DistilGPT-2** (or GPT-2), a transformer language model, fine-tuned using **LoRA (Low-Rank Adaptation)** — a parameter-efficient fine-tuning technique that trains less than 1% of model parameters while delivering performance competitive with full fine-tuning.
+The system is built on top of **DistilGPT-2** (or GPT-2), a transformer language model, fine-tuned using **LoRA (Low-Rank Adaptation)** â€” a parameter-efficient fine-tuning technique that trains less than 1% of model parameters while delivering performance competitive with full fine-tuning.
 
 ### Key highlights
 
@@ -40,7 +42,7 @@ The system is built on top of **DistilGPT-2** (or GPT-2), a transformer language
 |---|---|
 | Model | DistilGPT-2 (82M params) or GPT-2 (117M params) |
 | Fine-tuning method | LoRA (custom implementation, no peft) |
-| Trainable params | ~0.1–0.5% of total |
+| Trainable params | ~0.1â€“0.5% of total |
 | Number of classes | 20 legal clause types |
 | Dataset | Built-in sample data + optional LEDGAR (via HuggingFace) |
 | CLI | Full argparse CLI with 7 commands |
@@ -53,10 +55,10 @@ The system is built on top of **DistilGPT-2** (or GPT-2), a transformer language
 
 ### The Legal NLP Challenge
 
-Legal contracts are dense, long documents written in formal legal prose. A single contract may contain dozens of distinct clause types — governing law, termination conditions, payment schedules, confidentiality requirements — often interleaved without clear section boundaries.
+Legal contracts are dense, long documents written in formal legal prose. A single contract may contain dozens of distinct clause types â€” governing law, termination conditions, payment schedules, confidentiality requirements â€” often interleaved without clear section boundaries.
 
 **Manual review is expensive:**
-- A junior associate may spend 4–8 hours reviewing a single complex contract.
+- A junior associate may spend 4â€“8 hours reviewing a single complex contract.
 - Large enterprises process thousands of contracts per year.
 - Errors in contract interpretation lead to real financial and legal risk.
 
@@ -95,65 +97,65 @@ This approach:
 
 Full fine-tuning of GPT-2 (117M parameters) on a small legal dataset risks **catastrophic forgetting** and **overfitting**. LoRA addresses this by:
 
-1. **Freezing all base model weights** — the original knowledge is preserved
+1. **Freezing all base model weights** â€” the original knowledge is preserved
 2. **Injecting small trainable rank-decomposition matrices** into attention layers
-3. **Training only ~0.1–0.5% of parameters** — faster, cheaper, less prone to overfitting
-4. **Saving only the adapter** — the base model never changes, so adapters can be swapped
+3. **Training only ~0.1â€“0.5% of parameters** â€” faster, cheaper, less prone to overfitting
+4. **Saving only the adapter** â€” the base model never changes, so adapters can be swapped
 
 #### Why custom LoRA (no peft)?
 
 This project implements LoRA from scratch using PyTorch's forward hook mechanism. This approach:
 - Works transparently with GPT-2's internal `Conv1D` layers (which differ from standard `nn.Linear`)
 - Requires no additional dependencies
-- Is educational — demonstrates exactly how LoRA works at the mathematical level
+- Is educational â€” demonstrates exactly how LoRA works at the mathematical level
 
 ---
 
 ## 4. System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Legal Document LoRA Tagger                      │
-└─────────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                      Legal Document LoRA Tagger                      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 
   Input Text (legal clause)
-        │
-        ▼
-  ┌─────────────┐
-  │  Tokenizer  │  GPT2Tokenizer + 20 special label tokens
-  │  (extended) │  <Governing_Law>, <Termination>, ...
-  └──────┬──────┘
-         │  token IDs
-         ▼
-  ┌──────────────────────────────────────────────────┐
-  │              DistilGPT-2 Base Model               │
-  │  (all weights FROZEN — requires_grad=False)       │
-  │                                                   │
-  │  Embedding → [Block 0] → [Block 1] → ... →       │
-  │  [Block 5] → LayerNorm → LM Head                 │
-  │                                                   │
-  │   Each Block:                                     │
-  │   ┌───────────────────────────────────────────┐  │
-  │   │  LayerNorm                                │  │
-  │   │  c_attn (Q,K,V fused) ─── LoRA Hook ──►  │  │
-  │   │                       + LoRA delta        │  │
-  │   │  Attention + Softmax                      │  │
-  │   │  c_proj ────────────── LoRA Hook ──────►  │  │
-  │   │                       + LoRA delta        │  │
-  │   │  LayerNorm + MLP                          │  │
-  │   └───────────────────────────────────────────┘  │
-  └──────────────────────────┬───────────────────────┘
-                             │  logits (vocab_size)
-                             ▼
-  ┌─────────────────────────────────────────────────┐
-  │            Label Token Scoring                   │
-  │                                                  │
-  │  Extract logits for the 20 special label tokens  │
-  │  Apply softmax → probabilities                   │
-  │  Return argmax label + confidence score          │
-  └─────────────────────────────────────────────────┘
-         │
-         ▼
+        â”‚
+        â–¼
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚  Tokenizer  â”‚  GPT2Tokenizer + 20 special label tokens
+  â”‚  (extended) â”‚  <Governing_Law>, <Termination>, ...
+  â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
+         â”‚  token IDs
+         â–¼
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚              DistilGPT-2 Base Model               â”‚
+  â”‚  (all weights FROZEN â€” requires_grad=False)       â”‚
+  â”‚                                                   â”‚
+  â”‚  Embedding â†’ [Block 0] â†’ [Block 1] â†’ ... â†’       â”‚
+  â”‚  [Block 5] â†’ LayerNorm â†’ LM Head                 â”‚
+  â”‚                                                   â”‚
+  â”‚   Each Block:                                     â”‚
+  â”‚   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”‚
+  â”‚   â”‚  LayerNorm                                â”‚  â”‚
+  â”‚   â”‚  c_attn (Q,K,V fused) â”€â”€â”€ LoRA Hook â”€â”€â–º  â”‚  â”‚
+  â”‚   â”‚                       + LoRA delta        â”‚  â”‚
+  â”‚   â”‚  Attention + Softmax                      â”‚  â”‚
+  â”‚   â”‚  c_proj â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ LoRA Hook â”€â”€â”€â”€â”€â”€â–º  â”‚  â”‚
+  â”‚   â”‚                       + LoRA delta        â”‚  â”‚
+  â”‚   â”‚  LayerNorm + MLP                          â”‚  â”‚
+  â”‚   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+                             â”‚  logits (vocab_size)
+                             â–¼
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚            Label Token Scoring                   â”‚
+  â”‚                                                  â”‚
+  â”‚  Extract logits for the 20 special label tokens  â”‚
+  â”‚  Apply softmax â†’ probabilities                   â”‚
+  â”‚  Return argmax label + confidence score          â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+         â”‚
+         â–¼
   Output: { label: "Governing_Law", confidence: 0.87 }
 ```
 
@@ -162,13 +164,13 @@ This project implements LoRA from scratch using PyTorch's forward hook mechanism
 ```
 Forward pass through c_attn:
 
-  x ──► c_attn (frozen) ──► base_output
-  │
-  └──► LoRALayer
+  x â”€â”€â–º c_attn (frozen) â”€â”€â–º base_output
+  â”‚
+  â””â”€â”€â–º LoRALayer
          lora_A: (r, in_features)   kaiming_uniform init
          lora_B: (out_features, r)  zero init
          delta = dropout(x) @ A.T @ B.T * (alpha/r)
-         ──► delta
+         â”€â”€â–º delta
   
   final_output = base_output + delta
 ```
@@ -180,20 +182,20 @@ Forward pass through c_attn:
 | Technology | Version | Purpose |
 |---|---|---|
 | Python | 3.10+ | Core runtime |
-| PyTorch | ≥2.0.0 | Deep learning framework, autograd |
-| Transformers (HuggingFace) | ≥4.35.0 | GPT-2 model and tokenizer |
-| Datasets (HuggingFace) | ≥2.14.0 | Optional LEDGAR dataset loading |
-| scikit-learn | ≥1.3.0 | Evaluation metrics (accuracy, F1, etc.) |
-| NumPy | ≥1.24.0 | Numerical utilities, random seed |
-| tqdm | ≥4.65.0 | Progress bars |
-| python-dotenv | ≥1.0.0 | Environment configuration |
-| pytest | ≥7.0.0 | Test framework |
-| GitHub Actions | — | CI/CD pipeline |
+| PyTorch | â‰¥2.0.0 | Deep learning framework, autograd |
+| Transformers (HuggingFace) | â‰¥4.35.0 | GPT-2 model and tokenizer |
+| Datasets (HuggingFace) | â‰¥2.14.0 | Optional LEDGAR dataset loading |
+| scikit-learn | â‰¥1.3.0 | Evaluation metrics (accuracy, F1, etc.) |
+| NumPy | â‰¥1.24.0 | Numerical utilities, random seed |
+| tqdm | â‰¥4.65.0 | Progress bars |
+| python-dotenv | â‰¥1.0.0 | Environment configuration |
+| pytest | â‰¥7.0.0 | Test framework |
+| GitHub Actions | â€” | CI/CD pipeline |
 
 ### Why these choices?
 
 - **PyTorch**: Industry-standard, flexible, excellent debugging support via eager mode
-- **DistilGPT-2**: 40% smaller than GPT-2, 60% faster at inference, retains 97% of GPT-2 performance — ideal for resource-constrained environments
+- **DistilGPT-2**: 40% smaller than GPT-2, 60% faster at inference, retains 97% of GPT-2 performance â€” ideal for resource-constrained environments
 - **HuggingFace Transformers**: De-facto standard for pre-trained NLP models; seamless model loading with `from_pretrained`
 - **Custom LoRA**: Educational, no extra dependencies, full control over hook placement
 
@@ -203,7 +205,7 @@ Forward pass through c_attn:
 
 ### Built-in Sample Data
 
-The project ships with a curated set of **at least 3 expert-written example clauses per label** (20 labels × 5 examples = 100 examples). These are realistic legal texts covering all 20 clause types.
+The project ships with a curated set of **at least 3 expert-written example clauses per label** (20 labels Ã— 5 examples = 100 examples). These are realistic legal texts covering all 20 clause types.
 
 Split strategy: **stratified 70/15/15** (train/val/test) per class, ensuring:
 - Every class appears in every split
@@ -227,11 +229,11 @@ The pipeline:
 
 ```
 load_dataset_for_training(use_ledgar=True)
-    ├── try_load_ledgar()
-    │       ├── load_dataset("lex_glue", "ledgar")   # HuggingFace
-    │       ├── map labels → CLAUSE_LABELS
-    │       └── return (train, val, test) or None
-    └── fallback: get_sample_dataset()               # always works
+    â”œâ”€â”€ try_load_ledgar()
+    â”‚       â”œâ”€â”€ load_dataset("lex_glue", "ledgar")   # HuggingFace
+    â”‚       â”œâ”€â”€ map labels â†’ CLAUSE_LABELS
+    â”‚       â””â”€â”€ return (train, val, test) or None
+    â””â”€â”€ fallback: get_sample_dataset()               # always works
 ```
 
 ### LegalClauseDataset
@@ -248,7 +250,7 @@ This **generative framing** trains GPT-2 to predict the label token as the natur
 
 ## 7. GPT-2 Tokenizer Extension
 
-GPT-2's tokenizer uses Byte-Pair Encoding (BPE) and has no built-in concept of legal clause labels. We extend it by adding **20 special tokens** — one per clause label.
+GPT-2's tokenizer uses Byte-Pair Encoding (BPE) and has no built-in concept of legal clause labels. We extend it by adding **20 special tokens** â€” one per clause label.
 
 ```python
 special_tokens = ["<Governing_Law>", "<Termination>", "<Confidentiality>", ...]
@@ -264,14 +266,14 @@ model.resize_token_embeddings(len(tokenizer))
 | Special tokens (e.g., `<Governing_Law>`) | Single token; unambiguous; no BPE splitting | Requires vocab resize |
 
 By adding special tokens:
-1. Each label maps to exactly **one token ID** — no multi-token ambiguity
+1. Each label maps to exactly **one token ID** â€” no multi-token ambiguity
 2. The model can be evaluated by simply checking the probability of that one token
 3. New embedding rows are initialized at random and become the learnable "label anchors"
 
 ```python
 # After adding special tokens:
 tokenizer.encode("<Governing_Law>", add_special_tokens=False)
-# → [50257]  (a single new token ID)
+# â†’ [50257]  (a single new token ID)
 ```
 
 **Embedding resize**: After `resize_token_embeddings`, the new rows are set to `requires_grad=True` so they are updated during training alongside the LoRA parameters.
@@ -285,27 +287,27 @@ tokenizer.encode("<Governing_Law>", add_special_tokens=False)
 Standard fine-tuning modifies a weight matrix **W** directly:
 
 ```
-W_new = W + ΔW
+W_new = W + Î”W
 ```
 
-LoRA constrains **ΔW** to have low rank **r ≪ min(d_in, d_out)**:
+LoRA constrains **Î”W** to have low rank **r â‰ª min(d_in, d_out)**:
 
 ```
-ΔW = B @ A     where A ∈ ℝ^{r × d_in},  B ∈ ℝ^{d_out × r}
+Î”W = B @ A     where A âˆˆ â„^{r Ã— d_in},  B âˆˆ â„^{d_out Ã— r}
 ```
 
 The forward pass becomes:
 
 ```
-h = W x + (B @ A) x · (α / r)
-  = W x + B (A x) · scaling
+h = W x + (B @ A) x Â· (Î± / r)
+  = W x + B (A x) Â· scaling
 ```
 
-where **α** is a scaling hyperparameter that controls the magnitude of the adaptation.
+where **Î±** is a scaling hyperparameter that controls the magnitude of the adaptation.
 
 **Initialization**:
-- **A** is initialized with `kaiming_uniform` (like default `nn.Linear`) — provides diverse gradients from the first step
-- **B** is initialized to **zero** — so at the start of training, `ΔW = 0` and the model is identical to the base model
+- **A** is initialized with `kaiming_uniform` (like default `nn.Linear`) â€” provides diverse gradients from the first step
+- **B** is initialized to **zero** â€” so at the start of training, `Î”W = 0` and the model is identical to the base model
 
 ### Implementation in This Project
 
@@ -320,13 +322,13 @@ class LoRALayer(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        # x: (..., in_features) → output: (..., out_features)
+        # x: (..., in_features) â†’ output: (..., out_features)
         return (self.dropout(x) @ self.lora_A.T @ self.lora_B.T) * self.scaling
 ```
 
 ### Hook-Based Injection
 
-GPT-2 uses `Conv1D` (not `nn.Linear`) for its attention projections. `Conv1D` has weight shape `(in, out)` — the transpose of `nn.Linear`. Replacing these layers directly is fragile.
+GPT-2 uses `Conv1D` (not `nn.Linear`) for its attention projections. `Conv1D` has weight shape `(in, out)` â€” the transpose of `nn.Linear`. Replacing these layers directly is fragile.
 
 Instead, we use **PyTorch forward hooks**: a function called automatically after each targeted module's forward pass that adds the LoRA delta to the output:
 
@@ -341,14 +343,14 @@ def make_hook(lora_layer):
 module.register_forward_hook(make_hook(lora))
 ```
 
-**Target modules**: `c_attn` (fused Q, K, V projection, shape 768→2304) and `c_proj` (output projection, shape 768→768).
+**Target modules**: `c_attn` (fused Q, K, V projection, shape 768â†’2304) and `c_proj` (output projection, shape 768â†’768).
 
 ### Hyperparameters
 
 | Hyperparameter | Default | Meaning |
 |---|---|---|
-| `r` | 4 | LoRA rank — controls expressiveness vs. parameter count |
-| `alpha` | 16 | Scaling factor — controls update magnitude |
+| `r` | 4 | LoRA rank â€” controls expressiveness vs. parameter count |
+| `alpha` | 16 | Scaling factor â€” controls update magnitude |
 | `dropout` | 0.1 | Dropout on input to LoRA branch |
 | `lr` | 3e-4 | AdamW learning rate |
 | `epochs` | 3 | Training epochs |
@@ -356,7 +358,7 @@ module.register_forward_hook(make_hook(lora))
 
 **Parameter count** for `distilgpt2` with `r=4`:
 - Base model: ~82M params (all frozen)
-- LoRA params: ~12 layers × 2 targets × 2 matrices × (r × dim) ≈ ~50K params
+- LoRA params: ~12 layers Ã— 2 targets Ã— 2 matrices Ã— (r Ã— dim) â‰ˆ ~50K params
 - Trainable %: < 0.1%
 
 ---
@@ -396,8 +398,8 @@ python -m app.cli train --ledgar --epochs 10 --batch-size 16
 
 ```
 1. Load DistilGPT-2 tokenizer + model
-2. Add 20 special label tokens → resize embeddings
-3. Wrap model in GPT2LoRAModel → inject LoRA hooks
+2. Add 20 special label tokens â†’ resize embeddings
+3. Wrap model in GPT2LoRAModel â†’ inject LoRA hooks
 4. Freeze all base parameters
 5. Build LegalClauseDataset (train, val)
 6. AdamW optimizer on LoRA params only
@@ -412,10 +414,10 @@ python -m app.cli train --ledgar --epochs 10 --batch-size 16
 
 ```
 checkpoints/
-├── best_checkpoint/
-│   └── lora_adapter.pt        ← best val loss checkpoint
-└── final_adapter/
-    └── lora_adapter.pt        ← final epoch checkpoint
+â”œâ”€â”€ best_checkpoint/
+â”‚   â””â”€â”€ lora_adapter.pt        â† best val loss checkpoint
+â””â”€â”€ final_adapter/
+    â””â”€â”€ lora_adapter.pt        â† final epoch checkpoint
 ```
 
 Each `lora_adapter.pt` is a dict:
@@ -478,7 +480,7 @@ result = predict_clause(
     model,
     tokenizer
 )
-# → {"label": "Payment_Terms", "token": "<Payment_Terms>", "confidence": 0.91}
+# â†’ {"label": "Payment_Terms", "token": "<Payment_Terms>", "confidence": 0.91}
 ```
 
 ### How inference works
@@ -499,9 +501,9 @@ result = predict_clause(
 | Metric | Formula | Interpretation |
 |---|---|---|
 | **Accuracy** | correct / total | Overall fraction correctly classified |
-| **Precision (weighted)** | Σ (class_precision × support) / total | How precise predictions are, weighted by class size |
-| **Recall (weighted)** | Σ (class_recall × support) / total | How many true instances were found |
-| **F1 (weighted)** | 2 × P × R / (P + R) | Harmonic mean of precision and recall |
+| **Precision (weighted)** | Î£ (class_precision Ã— support) / total | How precise predictions are, weighted by class size |
+| **Recall (weighted)** | Î£ (class_recall Ã— support) / total | How many true instances were found |
+| **F1 (weighted)** | 2 Ã— P Ã— R / (P + R) | Harmonic mean of precision and recall |
 | **Confusion matrix** | C[i][j] = predicted j when true i | Per-class breakdown of errors |
 
 Metrics are computed using **scikit-learn** when available, with a manual fallback for accuracy-only when sklearn is absent.
@@ -534,7 +536,7 @@ F1:        0.4100
 Avg inference time: 45.3ms per clause
 ```
 
-> **Note**: With only 3–5 examples per class and no LEDGAR data, accuracy will be modest. The goal of this project is to demonstrate the LoRA fine-tuning pipeline; production performance requires LEDGAR or a larger annotated corpus.
+> **Note**: With only 3â€“5 examples per class and no LEDGAR data, accuracy will be modest. The goal of this project is to demonstrate the LoRA fine-tuning pipeline; production performance requires LEDGAR or a larger annotated corpus.
 
 ---
 
@@ -687,10 +689,10 @@ cp .env.example .env
 
 ```bash
 python -m app.cli hello
-# → Hello from Legal Document LoRA Tagger!
+# â†’ Hello from Legal Document LoRA Tagger!
 
 python -m pytest tests/ -v
-# → All pure-Python tests should pass
+# â†’ All pure-Python tests should pass
 ```
 
 ### Minimal install (no ML packages, for testing only)
@@ -715,13 +717,13 @@ python -m app.cli <command> [options]
 lora-tagger <command> [options]
 ```
 
-### `hello` — Print greeting
+### `hello` â€” Print greeting
 
 ```bash
 python -m app.cli hello
 ```
 
-### `prepare-data` — Inspect dataset
+### `prepare-data` â€” Inspect dataset
 
 ```bash
 python -m app.cli prepare-data [--ledgar] [--n-per-class N]
@@ -732,7 +734,7 @@ python -m app.cli prepare-data [--ledgar] [--n-per-class N]
 | `--ledgar` | False | Try to load LEDGAR from HuggingFace |
 | `--n-per-class` | 5 | Samples per class from built-in data |
 
-### `train` — Train the LoRA model
+### `train` â€” Train the LoRA model
 
 ```bash
 python -m app.cli train [OPTIONS]
@@ -749,19 +751,19 @@ python -m app.cli train [OPTIONS]
 | `--n-per-class` | 5 | Samples per class (sample data) |
 | `--ledgar` | False | Use LEDGAR dataset |
 
-### `evaluate` — Evaluate model
+### `evaluate` â€” Evaluate model
 
 ```bash
 python -m app.cli evaluate [--output-dir DIR] [--n-per-class N]
 ```
 
-### `predict` — Classify a single clause
+### `predict` â€” Classify a single clause
 
 ```bash
 python -m app.cli predict --text "TEXT" [--output-dir DIR]
 ```
 
-### `process-document` — Tag a full document
+### `process-document` â€” Tag a full document
 
 ```bash
 python -m app.cli process-document --input FILE [--output FILE] [--output-dir DIR]
@@ -773,7 +775,7 @@ python -m app.cli process-document --input FILE [--output FILE] [--output-dir DI
 | `--output` | Path to write tagged output (optional; prints to stdout if omitted) |
 | `--output-dir` | Directory containing the trained adapter |
 
-### `batch` — Process a directory of documents
+### `batch` â€” Process a directory of documents
 
 ```bash
 python -m app.cli batch --input DIR [--output DIR] [--output-dir DIR]
@@ -781,7 +783,7 @@ python -m app.cli batch --input DIR [--output DIR] [--output-dir DIR]
 
 | Option | Default | Description |
 |---|---|---|
-| `--input` | — | Directory containing `.txt` files (required) |
+| `--input` | â€” | Directory containing `.txt` files (required) |
 | `--output` | ./results | Output directory for tagged documents |
 | `--output-dir` | ./checkpoints | Directory containing the adapter |
 
@@ -792,7 +794,7 @@ python -m app.cli batch --input DIR [--output DIR] [--output-dir DIR]
 ### Current Limitations
 
 #### 1. Small training data
-The built-in sample dataset has only 3–5 examples per class. With 20 classes and ~100 total examples, the model cannot truly learn to distinguish all clause types. LEDGAR mitigates this but is still small relative to the task complexity.
+The built-in sample dataset has only 3â€“5 examples per class. With 20 classes and ~100 total examples, the model cannot truly learn to distinguish all clause types. LEDGAR mitigates this but is still small relative to the task complexity.
 
 #### 2. Generative classification is suboptimal
 Using a language model's next-token probabilities for classification is an indirect approach. A dedicated encoder model (e.g., Legal-BERT, RoBERTa-base) with a classification head would typically outperform this approach on accuracy.
@@ -804,7 +806,7 @@ Each label must map to a single token. Labels like `<Limitation_of_Liability>` a
 Real contracts sometimes overlap clause types (e.g., a clause that is both a Waiver and relates to Intellectual Property). The current model assigns exactly one label.
 
 #### 5. CPU inference is slow
-Without a GPU, inference for a 100-clause document may take 1–5 minutes. The model is not quantized.
+Without a GPU, inference for a 100-clause document may take 1â€“5 minutes. The model is not quantized.
 
 #### 6. Hook-based LoRA merging
 Because LoRA is applied via hooks rather than weight replacement, the LoRA delta cannot be "merged" into the base weights at save time (which would eliminate inference overhead). The current implementation always applies the delta at runtime.
@@ -815,9 +817,9 @@ Because LoRA is applied via hooks rather than weight replacement, the LoRA delta
 |---|---|---|
 | **Legal-BERT backbone** | Replace DistilGPT-2 with `nlpaueb/legal-bert-base-uncased` for stronger domain pre-training | High |
 | **Weight merging** | Implement `merge_lora_into_weights()` to fold LoRA delta into base weights before export, eliminating hook overhead | Medium |
-| **Quantization** | INT8/INT4 quantization (via `bitsandbytes`) for 4× faster CPU inference | Medium |
+| **Quantization** | INT8/INT4 quantization (via `bitsandbytes`) for 4Ã— faster CPU inference | Medium |
 | **Multi-label support** | Use sigmoid instead of softmax; predict multiple labels per clause | Medium |
-| **Larger rank search** | Hyperparameter sweep over r ∈ {2, 4, 8, 16, 32} to find optimal rank-accuracy tradeoff | Low |
+| **Larger rank search** | Hyperparameter sweep over r âˆˆ {2, 4, 8, 16, 32} to find optimal rank-accuracy tradeoff | Low |
 | **RLHF / DPO** | Use feedback from legal experts to further align predictions via reinforcement learning | Low |
 | **Confidence calibration** | Platt scaling or temperature scaling to get well-calibrated confidence scores | Low |
 | **REST API** | FastAPI wrapper for integration with document management systems | Medium |
@@ -835,8 +837,9 @@ Contributions are welcome! Please:
 
 ### License
 
-MIT License — see `LICENSE` for details.
+MIT License â€” see `LICENSE` for details.
 
 ---
 
 *Built as a demonstration of parameter-efficient fine-tuning for legal NLP. Not intended for production legal advice.*
+
